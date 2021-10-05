@@ -387,7 +387,9 @@
     reset();
     decoder = new Module.JpegXLDecoder();
     encoder = new Module.JpegXLEncoder();
-    
+    $('#imageSelector').val('../../test/fixtures/jxl/CT1.jxl');
+    $('#effortSelector').val('3');
+
     load('../../test/fixtures/jxl/CT1.jxl');
 
     $('#imageSelector').change(function(e) {
