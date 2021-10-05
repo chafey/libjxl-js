@@ -168,6 +168,10 @@
     }
     let inOffset = 0;
    
+    minMax = getMinMax(frameInfo, pixelData);
+    $('#minPixel').text('' + minMax.min);
+    $('#maxPixel').text('' + minMax.max);
+
     for(var y=0; y < frameInfo.height; y++) {
       for (var x = 0; x < frameInfo.width; x++) {
         imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
@@ -244,8 +248,6 @@
           deltas[inOffset++] = Math.abs(comp - unc);
       }
     }
-    const deltaMinMax = getMinMax(frameInfo, deltas);
-    console.log('deltas min/max', deltaMinMax);
     inOffset = 0;
 
     for(var y=0; y < frameInfo.height; y++) {
@@ -277,7 +279,6 @@
     var myImageData = ctx.createImageData(frameInfo.width, frameInfo.height);
 
     const visualizeDeltas = $('#visualizeDeltas').is(":checked"); 
-
 
     if(frameInfo.componentCount > 1) {
       colorToCanvas(frameInfo, pixelData, myImageData);
@@ -346,26 +347,24 @@
     $('#encodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
   }
 
+  function loadPixelData(arrayBuffer) {
+    fullEncodedBitStream = new Uint8Array(arrayBuffer);
+    encodedBitStream = new Uint8Array(arrayBuffer);
+    $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+    $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
+    decode();
+    uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
+    uncompressedImageFrame.set(decoder.getDecodedBuffer());     
+  }
+
   function load(url) {
     fetch(url)
     .then((response) => {
       return response.arrayBuffer();
     })
     .then((arrayBuffer) => {
-      // {
-        fullEncodedBitStream = new Uint8Array(arrayBuffer);
-        encodedBitStream = new Uint8Array(arrayBuffer);
-        $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
-        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
-        decode();
-        uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
-        uncompressedImageFrame.set(decoder.getDecodedBuffer());      //}
-      //catch(ex) {
-      //  $('#status').text('Exception thrown while parsing ' + ex);
-     // }
-    });//.catch(function() {
-      //$//('#status').text('error loading ' + url);
-    //});
+      loadPixelData(arrayBuffer)
+    });
   }
 
   function reset() {
@@ -385,6 +384,7 @@
   }
 
   Module.onRuntimeInitialized = async _ => {
+    reset();
     decoder = new Module.JpegXLDecoder();
     encoder = new Module.JpegXLEncoder();
     
@@ -406,11 +406,17 @@
     
     $('#distanceParameterRange').on('input', function(e) {
       distance = parseFloat($(this).val()) / 100
-      $('#distanceParameter').text('' + distance);
+      if(distance === 0) {
+        $('#distanceParameter').text('' + distance + ' (lossless)');
+      } else {
+        $('#distanceParameter').text('' + distance + ' (lossy)');
+      }
       encode(effort, distance);
       // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+      $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
       decode();
     });
 
@@ -462,14 +468,7 @@
       var fileReader = new FileReader();
       fileReader.onload = function (e) {
           var fileAsArrayBuffer = e.target.result;
-
-          fullEncodedBitStream = new Uint8Array(fileAsArrayBuffer);
-          encodedBitStream = new Uint8Array(fileAsArrayBuffer);
-          $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
-          $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
-          decode();
-          uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
-          uncompressedImageFrame.set(decoder.getDecodedBuffer());      //}
+          loadPixelData(fileAsArrayBuffer)
           reset();
           try {
             decode();
@@ -493,7 +492,6 @@
     dropZone.addEventListener('drop', handleFileSelect, false);
 
     $('#download').click(function() {
-      // download the de-identified DICOM P10 bytestream
       var blob = new Blob([encodedBitStream], {type: "image/jxl"});
       var url = window.URL.createObjectURL(blob);
       window.open(url);
