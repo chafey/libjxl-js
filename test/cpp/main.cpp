@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
     roundTrip("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
     */
 
-    encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
+/*    encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
     encodeFile("test/fixtures/raw/CT2.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2048, "test/fixtures/jxl/CT2.jxl");
     encodeFile("test/fixtures/raw/MG1.RAW", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MG1.jxl");
     encodeFile("test/fixtures/raw/MR1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR1.jxl");
@@ -183,8 +183,9 @@ int main(int argc, char** argv) {
     encodeFile("test/fixtures/raw/RG3.RAW", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG3.jxl");
     encodeFile("test/fixtures/raw/SC1.RAW", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/SC1.jxl");
     encodeFile("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
-    /*
+  */
     decodeFile("test/fixtures/jxl/CT1.jxl");
+    /*
     decodeFile("test/fixtures/jxl/CT2.jxl");
     decodeFile("test/fixtures/jxl/MG1.jxl");
     decodeFile("test/fixtures/jxl/MR1.jxl");

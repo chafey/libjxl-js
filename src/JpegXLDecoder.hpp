@@ -88,6 +88,7 @@ class JpegXLDecoder {
         if (status == JXL_DEC_ERROR) {
             return -2;
         } else if (status == JXL_DEC_NEED_MORE_INPUT) {
+            JxlDecoderFlushImage(dec.get());
             return -3;
         } else if (status == JXL_DEC_BASIC_INFO) {
             if (JXL_DEC_SUCCESS != JxlDecoderGetBasicInfo(dec.get(), &info)) {
