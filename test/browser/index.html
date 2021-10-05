@@ -66,15 +66,15 @@
         <div class="row">
       <div class="col-md-12">
         <select id="effortSelector">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7" selected>7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
+          <option value="1">1 - lightning (fastest/largest)</option>
+          <option value="2">2 - thunder</option>
+          <option value="3">3 - falcon</option>
+          <option value="4">4 - cheetah</option>
+          <option value="5">5 - hare</option>
+          <option value="6">6 - wombat</option>
+          <option value="7" selected>7 - squirrel (default)</option>
+          <option value="8">8 - kitten</option>
+          <option value="9">9 - tortoise (slowest/smallest)</option>
         </select>      
       </div>
     </div>
@@ -101,7 +101,6 @@
   let frameInfo = undefined;
   let quantization = 0;
   let minMax = undefined;
-  let interleaveMode = undefined;
   let effort = 7;
 
   function getMinMax(frameInfo, pixelData) {
@@ -131,7 +130,7 @@
     }
   }
 
-  function colorToCanvas(frameInfo, pixelData, imageData, interleaveMode) {
+  function colorToCanvas(frameInfo, pixelData, imageData) {
     let outOffset = 0;
     const bytesPerSample = (frameInfo.bitsPerSample <= 8) ? 1 : 2;
     let planeSize = frameInfo.width * frameInfo.height * bytesPerSample;
@@ -143,25 +142,10 @@
    
     for(var y=0; y < frameInfo.height; y++) {
       for (var x = 0; x < frameInfo.width; x++) {
-        if (interleaveMode === 0) { // planar (RRRRGGGGBBBB)
-          imageData.data[outOffset++] = pixelData[inOffset] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset + planeSize] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset + (planeSize * 2)] >> shift;
-          imageData.data[outOffset++] = 255;
-          inOffset++;
-        }
-        else if (interleaveMode === 1) { // line (actually RGB)
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = 255;
-        }
-        else if (interleaveMode === 2) { // pixel/sample (actually RGB)
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
-          imageData.data[outOffset++] = 255;
-        }
+        imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
+        imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
+        imageData.data[outOffset++] = pixelData[inOffset++] >> shift;
+        imageData.data[outOffset++] = 255;
       }
     }
   }
@@ -251,7 +235,7 @@
     }
   }
 
-  function display(frameInfo, decodedBuffer, interleaveMode) {
+  function display(frameInfo, decodedBuffer) {
     const signed = $('#signed').is(":checked"); 
 
     const pixelData = getPixelData(frameInfo, decodedBuffer, signed);
@@ -268,7 +252,7 @@
 
 
     if(frameInfo.componentCount > 1) {
-      colorToCanvas(frameInfo, pixelData, myImageData, interleaveMode);
+      colorToCanvas(frameInfo, pixelData, myImageData);
     } else {
       if(visualizeDeltas) {
         deltasToCanvas(frameInfo, pixelData, myImageData, signed);
@@ -300,7 +284,6 @@
     $('#decodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
 
     frameInfo = decoder.getFrameInfo();
-    //interleaveMode = decoder.getInterleaveMode();
     //const nearLossless = decoder.getNearLossless();
 
     // Display image properties
@@ -312,7 +295,7 @@
     var decodedBuffer = decoder.getDecodedBuffer();
     $('#decodedSize').text(''+decodedBuffer.length.toLocaleString() + " bytes");
     $('#compressionRatio').text('' + (decodedBuffer.length / encodedBitStream.length).toFixed(2) + ":1");
-    display(frameInfo, decodedBuffer, interleaveMode);
+    display(frameInfo, decodedBuffer);
   }
 
   function encode(effort, iterations = 1) {
@@ -320,7 +303,6 @@
     const decodedBytes = encoder.getDecodedBuffer(frameInfo);
     decodedBytes.set(uncompressedImageFrame);
     encoder.setEffort(effort);
-    //encoder.setInterleaveMode(interleaveMode)
     // Do the encode
     begin = performance.now(); // performance.now() returns value in milliseconds
     for(let i=0; i < iterations; i++) {
