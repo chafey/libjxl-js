@@ -27,6 +27,8 @@
         <option value="../../test/fixtures/jxl/RG3.jxl">RG3</option>
         <option value="../../test/fixtures/jxl/SC1.jxl">SC1</option>
         <option value="../../test/fixtures/jxl/XA1.jxl">XA1</option>
+        <option value="../../test/fixtures/jxl/nature_picture.jxl">Nature Picture</option>
+
       </select>
       <button id="benchmark">Benchmark</button>
     </div>
@@ -79,11 +81,11 @@
         <select id="effortSelector">
           <option value="1">1 - lightning (fastest/largest)</option>
           <option value="2">2 - thunder</option>
-          <option value="3">3 - falcon</option>
+          <option value="3" selected>3 - falcon (default)</option>
           <option value="4">4 - cheetah</option>
           <option value="5">5 - hare</option>
           <option value="6">6 - wombat</option>
-          <option value="7" selected>7 - squirrel (default)</option>
+          <option value="7">7 - squirrel </option>
           <option value="8">8 - kitten</option>
           <option value="9">9 - tortoise (slowest/smallest)</option>
         </select>      
@@ -113,7 +115,7 @@
   let frameInfo = undefined;
   let quantization = 0;
   let minMax = undefined;
-  let effort = 7;
+  let effort = 3;
 
   function getMinMax(frameInfo, pixelData) {
     const numPixels = frameInfo.width * frameInfo.height * frameInfo.componentCount;
@@ -345,7 +347,8 @@
         fullEncodedBitStream = new Uint8Array(arrayBuffer);
         encodedBitStream = new Uint8Array(arrayBuffer);
         $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
-        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        decode();
+        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
+        decode();
         uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
         uncompressedImageFrame.set(decoder.getDecodedBuffer());      //}
       //catch(ex) {
@@ -396,7 +399,7 @@
       $('#status').text('Please wait while benchmark runs....');
       setTimeout(() => {
         decode(50)
-        encode(effort, 50)
+        //encode(effort, 50)
         $('#status').text('');
       }, 1);
     });
@@ -440,7 +443,14 @@
       var fileReader = new FileReader();
       fileReader.onload = function (e) {
           var fileAsArrayBuffer = e.target.result;
+
+          fullEncodedBitStream = new Uint8Array(fileAsArrayBuffer);
           encodedBitStream = new Uint8Array(fileAsArrayBuffer);
+          $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+          $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
+          decode();
+          uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
+          uncompressedImageFrame.set(decoder.getDecodedBuffer());      //}
           reset();
           try {
             decode();
@@ -465,7 +475,7 @@
 
     $('#download').click(function() {
       // download the de-identified DICOM P10 bytestream
-      var blob = new Blob([encodedBitStream], {type: "image/jls"});
+      var blob = new Blob([encodedBitStream], {type: "image/jxl"});
       var url = window.URL.createObjectURL(blob);
       window.open(url);
       window.URL.revokeObjectURL(url);
