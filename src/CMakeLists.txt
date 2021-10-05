@@ -1,9 +1,6 @@
 add_executable(libjxljs jslib.cpp)
 
-target_link_libraries(libjxljs box
-      jxl-static
-      jxl_extras-static
-      jxl_threads-static
+target_link_libraries(libjxljs jxl-static
 )
 
 target_compile_features(libjxljs PUBLIC cxx_std_11)
