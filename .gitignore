@@ -1,6 +1,8 @@
 build/
 build-native/
 
+.DS_Store
+
 # Logs
 logs
 *.log

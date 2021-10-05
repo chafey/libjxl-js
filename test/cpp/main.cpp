@@ -189,6 +189,13 @@ int main(int argc, char** argv) {
     encodeFile("test/fixtures/raw/RG2.RAW", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG2.jxl");
     encodeFile("test/fixtures/raw/RG3.RAW", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG3.jxl");
     encodeFile("test/fixtures/raw/SC1.RAW", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/SC1.jxl");
+    encodeFile("test/fixtures/raw/US1.RAW", {.width = 640, .height = 480, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/US1.jxl");
+    encodeFile("test/fixtures/raw/VL1.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL1.jxl");
+    encodeFile("test/fixtures/raw/VL2.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL2.jxl");
+    encodeFile("test/fixtures/raw/VL3.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL3.jxl");
+    encodeFile("test/fixtures/raw/VL4.RAW", {.width = 2226, .height = 1868, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL4.jxl");
+    encodeFile("test/fixtures/raw/VL5.RAW", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL5.jxl");
+    encodeFile("test/fixtures/raw/VL6.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL6.jxl");
     encodeFile("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
 
     //decodeFile("test/fixtures/jxl/nature_picture.jxl", "test/fixtures/raw/nature_picture.raw");
