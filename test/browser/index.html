@@ -403,6 +403,8 @@
       // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+      $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        
       decode();
     });
     
