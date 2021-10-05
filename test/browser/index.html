@@ -57,7 +57,18 @@
       <div class="col-md-4">Dynamic Range: <span id="dynamicRange"></span></div>
     </div>
     <hr>
-
+    <div class="row">
+      <div class="col-md-12">
+        <b>Decoding Parameters</b>  
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <span>Encoded Bytes Read: </span><span id="encodedBytesRead">0</span>
+        <input type="range" class="custom-range" id="encodedBytesReadRange" min="0" max="5" value="0">
+      </div>
+    </div>
+    <hr>
     <div class="row">
       <div class="col-md-12">
         <b>Encoding Parameters</b>  
@@ -98,6 +109,7 @@
   let encoder = undefined;
   let encodedBitStream = undefined;
   let uncompressedImageFrame = undefined;
+  let fullEncodedBitStream = undefined; 
   let frameInfo = undefined;
   let quantization = 0;
   let minMax = undefined;
@@ -277,8 +289,12 @@
 
     // Decode
     begin = performance.now(); // performance.now() returns value in milliseconds
+    let result = undefined
     for(let i=0; i < iterations; i++) {
-      decoder.decode();
+      result = decoder.decode();
+      if(result !=0) {
+        $('#status').text('decode() returned error ' + result);
+      }
     }
     end = performance.now();
     $('#decodeTime').text(((end-begin) / iterations).toFixed(2) + ' ms');
@@ -326,8 +342,10 @@
     })
     .then((arrayBuffer) => {
       // {
+        fullEncodedBitStream = new Uint8Array(arrayBuffer);
         encodedBitStream = new Uint8Array(arrayBuffer);
-        decode();
+        $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+        $('#encodedBytesReadRange').attr('max', encodedBitStream.length-1);        decode();
         uncompressedImageFrame = new Uint8Array(decoder.getDecodedBuffer().length);
         uncompressedImageFrame.set(decoder.getDecodedBuffer());      //}
       //catch(ex) {
@@ -381,6 +399,22 @@
         encode(effort, 50)
         $('#status').text('');
       }, 1);
+    });
+
+    $('#encodedBytesReadRange').on('input', function(e) {
+      numBytes = parseInt($(this).val());
+      let length = fullEncodedBitStream.length - numBytes;
+      encodedBitStream = new Uint8Array(length);
+      for(let i=0; i < length; i++) {
+        encodedBitStream[i] = fullEncodedBitStream[i];
+      }
+      $('#encodedBytesRead').text('' + encodedBitStream.length.toLocaleString() + ' bytes');
+      try {
+        decode();
+      } catch(ex) {
+        $('#status').text('Exception thrown while parsing ' + ex);
+      } finally {
+      }
     });
 
     $('#visualizeDeltas').change(function() {
