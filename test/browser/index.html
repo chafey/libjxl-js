@@ -16,10 +16,19 @@
       <select id="imageSelector">
         <option value="../../test/fixtures/jxl/CT1.jxl" selected>CT1</option>
         <option value="../../test/fixtures/jxl/CT2.jxl">CT2</option>
-        <option value="../../test/fixtures/jxl/MG1.jxl">MG1</option>-->
+        <option value="../../test/fixtures/jxl/MG1.jxl">MG1</option>
+        <option value="../../test/fixtures/jxl/MR1.jxl">MR1</option>
+        <option value="../../test/fixtures/jxl/MR2.jxl">MR2</option>
+        <option value="../../test/fixtures/jxl/MR3.jxl">MR3</option>
+        <option value="../../test/fixtures/jxl/MR4.jxl">MR4</option>
+        <option value="../../test/fixtures/jxl/NM1.jxl">NM1</option>
+        <option value="../../test/fixtures/jxl/RG1.jxl">RG1</option>
+        <option value="../../test/fixtures/jxl/RG2.jxl">RG2</option>
+        <option value="../../test/fixtures/jxl/RG3.jxl">RG3</option>
+        <option value="../../test/fixtures/jxl/SC1.jxl">SC1</option>
+        <option value="../../test/fixtures/jxl/XA1.jxl">XA1</option>
       </select>
       <button id="benchmark">Benchmark</button>
-      <label><input id="signed" type="checkbox" value="">Signed Data - check to properly display signed DICOM images</label>   
     </div>
     <div class="row">
       <label><input id="visualizeDeltas" type="checkbox" value="">Visualize Deltas</label>   
@@ -46,31 +55,6 @@
       <div class="col-md-4">Min Pixel: <span id="minPixel"></span></div>
       <div class="col-md-4">Max Pixel: <span id="maxPixel"></span></div>
       <div class="col-md-4">Dynamic Range: <span id="dynamicRange"></span></div>
-    </div>
-    <hr>
-<!--
-
-    <div class="row">
-      <div class="col-md-4">Interleave Mode: <span id="interleaveMode"></span></div>
-      <div class="col-md-4">NEAR Parameter: <span id="nearLossless"></span></div>
-    </div>
--->
-    <hr>
-    <div class="row">
-      <div class="col-md-12">
-        <b>Encoding Parameters</b>  
-      </div>
-      </div>
-        <div class="row">
-      <div class="col-md-12">
-        <span>NEAR Parameter: </span><span id="nearParameter">0</span>
-        <input type="range" class="custom-range" id="nearParameterRange" min="0" max="100" value="0">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-12">
-        <button id="download">Download</button>
-      </div>
     </div>
     <hr>
     <div class="row">
@@ -367,7 +351,7 @@
     decoder = new Module.JpegXLDecoder();
     encoder = new Module.JpegXLEncoder();
     
-    load('../../test/fixtures/CT1.JLS');
+    load('../../test/fixtures/jxl/CT1.jxl');
     //load('../../test/fixtures/artificial-line.jls');
 
     $('#imageSelector').change(function(e) {
@@ -391,17 +375,6 @@
         decode(50)
         $('#status').text('');
       }, 1);
-    });
-
-    // set an event handler for the signed checkbox
-    $('#signed').change(function() {
-      console.log('checked toggle')
-      // this will contain a reference to the checkbox   
-      if (this.checked) {
-        decode();
-      } else {
-        decode();
-      }
     });
 
     $('#visualizeDeltas').change(function() {
