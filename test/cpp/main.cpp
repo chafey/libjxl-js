@@ -60,7 +60,7 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
     }
 }
 
-int decodeFile(const char* path) {
+int decodeFile(const char* path, const char* outPath = 0) {
     JpegXLDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
     readFile(path, encodedBytes);
@@ -72,6 +72,10 @@ int decodeFile(const char* path) {
     sub_timespec(start, finish, &delta);
     const double ms = (double)delta.tv_sec * 1000.0 + (double)(delta.tv_nsec) / 1000000.0;
     printf("Decode of %s took %f ms and returned %d\n", path, ms, result);
+    if(outPath) {
+       const std::vector<uint8_t>& decodedBytes = decoder.getDecodedBytes();
+       writeFile(outPath, decodedBytes);
+    }
     return result;
 }
 
@@ -155,6 +159,9 @@ void roundTrip(const char* inPath, const FrameInfo frameInfo, int offset, const 
 }
 
 int main(int argc, char** argv) {
+    //roundTrip("test/fixtures/raw/nature_picture.raw", {.width = 610, .height = 407, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/nature_picture.jxl");
+    //encodeFile("test/fixtures/raw/nature_picture.raw", {.width = 610, .height = 407, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/nature.jxl");
+
     /*roundTrip("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
     roundTrip("test/fixtures/raw/CT2.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2048, "test/fixtures/jxl/CT2.jxl");
     roundTrip("test/fixtures/raw/MG1.RAW", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MG1.jxl");
@@ -170,7 +177,7 @@ int main(int argc, char** argv) {
     roundTrip("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
     */
 
-/*    encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
+    encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
     encodeFile("test/fixtures/raw/CT2.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2048, "test/fixtures/jxl/CT2.jxl");
     encodeFile("test/fixtures/raw/MG1.RAW", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MG1.jxl");
     encodeFile("test/fixtures/raw/MR1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR1.jxl");
@@ -183,8 +190,10 @@ int main(int argc, char** argv) {
     encodeFile("test/fixtures/raw/RG3.RAW", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG3.jxl");
     encodeFile("test/fixtures/raw/SC1.RAW", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/SC1.jxl");
     encodeFile("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
-  */
-    decodeFile("test/fixtures/jxl/CT1.jxl");
+
+    //decodeFile("test/fixtures/jxl/nature_picture.jxl", "test/fixtures/raw/nature_picture.raw");
+
+    //decodeFile("test/fixtures/jxl/CT1.jxl");
     /*
     decodeFile("test/fixtures/jxl/CT2.jxl");
     decodeFile("test/fixtures/jxl/MG1.jxl");

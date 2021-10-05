@@ -21,7 +21,7 @@ class JpegXLEncoder {
   /// <summary>
   /// Constructor for encoding a JPEG-XL image from JavaScript.  
   /// </summary>
-  JpegXLEncoder() : effort_(7), progressive_(false) {
+  JpegXLEncoder() : effort_(3), progressive_(false) {
   }
 #ifdef __EMSCRIPTEN__
   /// <summary>
@@ -80,11 +80,11 @@ class JpegXLEncoder {
   /// Valid values are, from faster to slower speed: 
   ///  1:lightning 
   ///  2:thunder 
-  ///  3:falcon 
+  ///  3:falcon (default)
   ///  4:cheetah 
   ///  5:hare 
   ///  6:wombat 
-  ///  7:squirrel (default)
+  ///  7:squirrel 
   ///  8:kitten 
   ///  9:tortoise
   /// </summary>
@@ -123,14 +123,25 @@ class JpegXLEncoder {
       return -1;
     }
 
-    JxlColorEncoding color_encoding = {};
-    color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
-    color_encoding.gamma = 0.454550;
-    color_encoding.color_space = JXL_COLOR_SPACE_GRAY;
-    color_encoding.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
-    color_encoding.white_point = JXL_WHITE_POINT_D65;
-    if (JXL_ENC_SUCCESS != JxlEncoderSetColorEncoding(enc.get(), &color_encoding)) {
-      return -2;
+    if(frameInfo_.componentCount == 1) {
+      // grayscale path
+      JxlColorEncoding color_encoding = {};
+      color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+      color_encoding.gamma = 0.454550;
+      color_encoding.color_space = JXL_COLOR_SPACE_GRAY;
+      color_encoding.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+      color_encoding.white_point = JXL_WHITE_POINT_D65;
+      if (JXL_ENC_SUCCESS != JxlEncoderSetColorEncoding(enc.get(), &color_encoding)) {
+        return -2;
+      }
+    } else {
+      JxlColorEncoding color_encoding = {};
+      JxlColorEncodingSetToSRGB(&color_encoding,
+                                /*is_gray=*/pixel_format.num_channels < 3);
+      if (JXL_ENC_SUCCESS !=
+          JxlEncoderSetColorEncoding(enc.get(), &color_encoding)) {
+        return -2;
+      }
     }
 
     JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), nullptr);
