@@ -1,0 +1,3 @@
+[submodule "extern/libjxl"]
+	path = extern/libjxl
+	url = git@github.com:chafey/libjxl.git
