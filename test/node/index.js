@@ -28,6 +28,7 @@ function decode(pathToJPEGXLFile, iterations = 1) {
 function encode(pathToUncompressedImageFrame, imageFrame, iterations = 1) {
   const uncompressedImageFrame = fs.readFileSync(pathToUncompressedImageFrame);
   const encoder = new libjxljs.JpegXLEncoder();
+  encoder.setEffort(1)
   const decodedBytes = encoder.getDecodedBuffer(imageFrame);
   decodedBytes.set(uncompressedImageFrame);
 

@@ -33,6 +33,7 @@ EMSCRIPTEN_BINDINGS(JpegXLEncoder) {
     .constructor<>()
     .function("getDecodedBuffer", &JpegXLEncoder::getDecodedBuffer)
     .function("getEncodedBuffer", &JpegXLEncoder::getEncodedBuffer)
+    .function("setEffort", &JpegXLEncoder::setEffort)
     .function("encode", &JpegXLEncoder::encode)
    ;
 }
