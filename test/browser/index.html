@@ -57,6 +57,34 @@
       <div class="col-md-4">Dynamic Range: <span id="dynamicRange"></span></div>
     </div>
     <hr>
+
+    <div class="row">
+      <div class="col-md-12">
+        <b>Encoding Parameters</b>  
+      </div>
+      </div>
+        <div class="row">
+      <div class="col-md-12">
+        <select id="effortSelector">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7" selected>7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+        </select>      
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <button id="download">Download</button>
+      </div>
+    </div>
+    <hr>
+
     <div class="row">
     <div class="col-md-6">
         <canvas id='myCanvas' width="512" height="512"/>
@@ -74,6 +102,7 @@
   let quantization = 0;
   let minMax = undefined;
   let interleaveMode = undefined;
+  let effort = 7;
 
   function getMinMax(frameInfo, pixelData) {
     const numPixels = frameInfo.width * frameInfo.height * frameInfo.componentCount;
@@ -278,8 +307,6 @@
     $('#resolution').text(''+frameInfo.width + 'x' + frameInfo.height);
     $('#pixelFormat').text(''+frameInfo.bitsPerSample +' bpp');
     $('#componentCount').text(''+frameInfo.componentCount);
-    //$('#interleaveMode').text(''+interleaveMode);
-    //$('#nearLossless').text(''+nearLossless);
 
     // Display Image
     var decodedBuffer = decoder.getDecodedBuffer();
@@ -288,11 +315,11 @@
     display(frameInfo, decodedBuffer, interleaveMode);
   }
 
-  function encode(NEARParameter, iterations = 1) {
+  function encode(effort, iterations = 1) {
     // Setup buffer
     const decodedBytes = encoder.getDecodedBuffer(frameInfo);
     decodedBytes.set(uncompressedImageFrame);
-    //encoder.setNearLossless(NEARParameter);
+    encoder.setEffort(effort);
     //encoder.setInterleaveMode(interleaveMode)
     // Do the encode
     begin = performance.now(); // performance.now() returns value in milliseconds
@@ -343,8 +370,6 @@
     $('#resolution').text('');
     $('#pixelFormat').text('');
     $('#componentCount').text('');
-    $('#interleaveMode').text('');
-    $('#nearLossless').text('');
   }
 
   Module.onRuntimeInitialized = async _ => {
@@ -352,17 +377,15 @@
     encoder = new Module.JpegXLEncoder();
     
     load('../../test/fixtures/jxl/CT1.jxl');
-    //load('../../test/fixtures/artificial-line.jls');
 
     $('#imageSelector').change(function(e) {
       reset();
       load(e.target.options[e.target.selectedIndex].value);
     });
 
-    $('#nearParameterRange').on('input', function(e) {
-      NEARParameter = parseFloat($(this).val());
-      $('#nearParameter').text('' + NEARParameter);
-      encode(NEARParameter);
+    $('#effortSelector').change(function(e) {
+      effort = parseFloat(e.target.options[e.target.selectedIndex].value);
+      encode(effort);
       // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
@@ -373,6 +396,7 @@
       $('#status').text('Please wait while benchmark runs....');
       setTimeout(() => {
         decode(50)
+        encode(effort, 50)
         $('#status').text('');
       }, 1);
     });
