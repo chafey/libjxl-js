@@ -25,6 +25,6 @@ set_target_properties(
       -s ALLOW_MEMORY_GROWTH=1 \
       -s TOTAL_MEMORY=1073741824 \
       -s FILESYSTEM=0 \
-      -s EXPORTED_FUNCTIONS=[] \
-      -s EXTRA_EXPORTED_RUNTIME_METHODS=[ccall] \
+      -s EXPORTED_FUNCTIONS=[___cxa_is_pointer_type] \
+      -s EXPORTED_RUNTIME_METHODS=[ccall] \
    ")
