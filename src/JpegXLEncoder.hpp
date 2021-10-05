@@ -21,7 +21,7 @@ class JpegXLEncoder {
   /// <summary>
   /// Constructor for encoding a JPEG-XL image from JavaScript.  
   /// </summary>
-  JpegXLEncoder() : effort_(7) {
+  JpegXLEncoder() : effort_(7), progressive_(false) {
   }
 #ifdef __EMSCRIPTEN__
   /// <summary>
@@ -84,13 +84,21 @@ class JpegXLEncoder {
   ///  4:cheetah 
   ///  5:hare 
   ///  6:wombat 
-  ///  7:squirrel 
+  ///  7:squirrel (default)
   ///  8:kitten 
   ///  9:tortoise
   /// </summary>
   void setEffort(int effort) {
     effort_ = effort;
   }
+
+  /// <summary>
+  /// Sets the progressive flag (default is off/false) 
+  /// </summary>
+  void setProgressive(bool progressive) {
+    progressive_ = progressive;
+  }
+
 
   /// <summary>
   /// Executes an JPEG-XL encode using the data in the source buffer.  The
@@ -157,4 +165,5 @@ class JpegXLEncoder {
     std::vector<uint8_t> encoded_;
     FrameInfo frameInfo_;
     int effort_;
+    bool progressive_;
 };
