@@ -7,21 +7,26 @@ Try it in your browser [here](https://chafey.github.io/libjxl-js/test/browser/in
 
 ## Building
 
+This project uses git submodules to pull in libjxl.  If developing, initialize the git submodules first:
+
+```
+> git submodule update --init --recursive
+```
+
 This project uses Docker to provide a consistent developer environment.
 
 Create docker container 'jxlbuild'
 
-> Docker/build.sh
+```
+> ./Docker/build.sh
+```
 
 Create shell inside jxlbuild container:
 
-> Docker/docker.sh
-
-This project uses git submodules to pull in libjxl.  If developing, initialize the git submodules first (do this outside the container):
-
 ```
-> $ git submodule update --init --recursive
+> ./Docker/docker.sh
 ```
+
 
 To build WASM:
 
