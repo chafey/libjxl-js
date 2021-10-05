@@ -21,7 +21,7 @@ class JpegXLEncoder {
   /// <summary>
   /// Constructor for encoding a JPEG-XL image from JavaScript.  
   /// </summary>
-  JpegXLEncoder() : effort_(3), progressive_(false) {
+  JpegXLEncoder() : effort_(3), progressive_(false), lossless_(true), distance_(0.0f) {
   }
 #ifdef __EMSCRIPTEN__
   /// <summary>
@@ -99,6 +99,13 @@ class JpegXLEncoder {
     progressive_ = progressive;
   }
 
+  /// <summary>
+  /// Sets the quality (default is lossless)
+  /// </summary>
+  void setQuality(bool lossless, float distance) {
+    lossless_ = lossless;
+    distance_ = distance;
+  }
 
   /// <summary>
   /// Executes an JPEG-XL encode using the data in the source buffer.  The
@@ -145,8 +152,13 @@ class JpegXLEncoder {
     }
 
     JxlEncoderOptions* options = JxlEncoderOptionsCreate(enc.get(), nullptr);
-    JxlEncoderOptionsSetLossless(options, true);
     JxlEncoderOptionsSetEffort(options, effort_);
+    if(lossless_) {
+      JxlEncoderOptionsSetLossless(options, true);
+    } else {
+      JxlEncoderOptionsSetDistance(options, distance_);
+    }
+    
 
     if (JXL_ENC_SUCCESS != JxlEncoderAddImageFrame(options,
                               &pixel_format, (void*)decoded_.data(),
@@ -177,4 +189,6 @@ class JpegXLEncoder {
     FrameInfo frameInfo_;
     int effort_;
     bool progressive_;
+    bool lossless_;
+    float distance_;
 };

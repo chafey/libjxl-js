@@ -96,6 +96,14 @@
         </select>      
       </div>
     </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <span>Distance: </span><span id="distanceParameter">0</span>
+        <input type="range" class="custom-range" id="distanceParameterRange" min="0" max="1500" value="0">
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-12">
         <button id="download">Download</button>
@@ -121,6 +129,7 @@
   let quantization = 0;
   let minMax = undefined;
   let effort = 3;
+  let distance = 0;
 
   function getMinMax(frameInfo, pixelData) {
     const numPixels = frameInfo.width * frameInfo.height * frameInfo.componentCount;
@@ -321,11 +330,13 @@
     display(frameInfo, decodedBuffer);
   }
 
-  function encode(effort, iterations = 1) {
+  function encode(effort, distance, iterations = 1) {
     // Setup buffer
     const decodedBytes = encoder.getDecodedBuffer(frameInfo);
     decodedBytes.set(uncompressedImageFrame);
     encoder.setEffort(effort);
+    const lossless = distance === 0.0
+    encoder.setQuality(lossless, distance);
     // Do the encode
     begin = performance.now(); // performance.now() returns value in milliseconds
     for(let i=0; i < iterations; i++) {
@@ -336,13 +347,6 @@
   }
 
   function load(url) {
-    /*if(url === '../../test/fixtures/CT1.JLS' ||
-      url === '../../test/fixtures/CT2.JLS') {
-        $('#signed').prop('checked', true);
-      } else {
-        $('#signed').prop('checked', false);
-      }
-*/
     fetch(url)
     .then((response) => {
       return response.arrayBuffer();
@@ -393,18 +397,28 @@
 
     $('#effortSelector').change(function(e) {
       effort = parseFloat(e.target.options[e.target.selectedIndex].value);
-      encode(effort);
+      encode(effort, distance);
       // Get the encoded bytes and display them
       const encodedBytes = encoder.getEncodedBuffer();
       encodedBitStream = encodedBytes;
       decode();
     });
     
+    $('#distanceParameterRange').on('input', function(e) {
+      distance = parseFloat($(this).val()) / 100
+      $('#distanceParameter').text('' + distance);
+      encode(effort, distance);
+      // Get the encoded bytes and display them
+      const encodedBytes = encoder.getEncodedBuffer();
+      encodedBitStream = encodedBytes;
+      decode();
+    });
+
     $('#benchmark').click(function(e) {
       $('#status').text('Please wait while benchmark runs....');
       setTimeout(() => {
         decode(50)
-        //encode(effort, 50)
+        encode(effort, distance, 50)
         $('#status').text('');
       }, 1);
     });
