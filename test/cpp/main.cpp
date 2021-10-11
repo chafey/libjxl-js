@@ -59,161 +59,99 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
         td->tv_sec++;
     }
 }
-
-int decodeFile(const char* path, const char* outPath = 0) {
+void decodeFile(const char* imageName, size_t iterations = 1) {
+    std::string inPath = "test/fixtures/jxl/";
+    inPath += imageName;
+    inPath += ".jxl";
+    
     JpegXLDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
-    readFile(path, encodedBytes);
+    readFile(inPath, encodedBytes);
 
     timespec start, finish, delta;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-    int result = decoder.decode();
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
-    sub_timespec(start, finish, &delta);
-    const double ms = (double)delta.tv_sec * 1000.0 + (double)(delta.tv_nsec) / 1000000.0;
-    printf("Decode of %s took %f ms and returned %d\n", path, ms, result);
-    if(outPath) {
-       const std::vector<uint8_t>& decodedBytes = decoder.getDecodedBytes();
-       writeFile(outPath, decodedBytes);
-    }
-    return result;
-}
-
-void encodeFile(const char* inPath, const FrameInfo frameInfo, int offset, const char* outPath) {
-    JpegXLEncoder encoder;
-    //encoder.setEffort(1);
-    std::vector<uint8_t>& rawBytes = encoder.getDecodedBytes(frameInfo);
-    readFile(inPath, rawBytes);
-    short* pOffset = (short*)rawBytes.data();
-    for(int i=0; i < rawBytes.size() /2; i++) {
-        *pOffset += offset;
-        pOffset++;
-    }
-
-    timespec start, finish, delta;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-
-    encoder.encode();
-
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
-    sub_timespec(start, finish, &delta);
-    const double ms = (double)delta.tv_sec * 1000.0 + (double)(delta.tv_nsec) / 1000000.0;
-    printf("Encode of %s took %f ms (%ld bytes, %f:1 compression ratio)\n", inPath, ms, encoder.getEncodedBytes().size(), (float)rawBytes.size() / encoder.getEncodedBytes().size() );
-
-    if(outPath) {
-        const std::vector<uint8_t>& encodedBytes = encoder.getEncodedBytes();
-        writeFile(outPath, encodedBytes);
-    }
-}
-
-void roundTrip(const char* inPath, const FrameInfo frameInfo, int offset, const char* outPath)
-{
-    JpegXLEncoder encoder;
-    encoder.setEffort(1);
-    std::vector<uint8_t>& rawBytes = encoder.getDecodedBytes(frameInfo);
-    readFile(inPath, rawBytes);
-    short* pOffset = (short*)rawBytes.data();
-    for(int i=0; i < rawBytes.size() /2; i++) {
-        *pOffset += offset;
-        pOffset++;
-    }
-
-    timespec start, finish, delta;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-
-    encoder.encode();
-
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
-    sub_timespec(start, finish, &delta);
-    double ms = (double)delta.tv_sec * 1000.0 + (double)(delta.tv_nsec) / 1000000.0;
-    printf("Encode of %s took %f ms (%ld bytes, %f:1 compression ratio)\n", inPath, ms, encoder.getEncodedBytes().size(), (float)rawBytes.size() / encoder.getEncodedBytes().size() );
-
-    JpegXLDecoder decoder;
-    const std::vector<uint8_t>& encEncodedBytes = encoder.getEncodedBytes();
-    std::vector<uint8_t>& decEncodedBytes = decoder.getEncodedBytes();
-    decEncodedBytes.resize(encEncodedBytes.size());
-    for(int i=0; i < encEncodedBytes.size(); i++) {
-        decEncodedBytes[i] = encEncodedBytes[i];
-    }
-
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-    int result = decoder.decode();
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
-    sub_timespec(start, finish, &delta);
-    ms = (double)delta.tv_sec * 1000.0 + (double)(delta.tv_nsec) / 1000000.0;
-    printf("Decode of %s took %f ms and returned %d\n", inPath, ms, result);
-
-    const std::vector<uint8_t>& decodedBytes = decoder.getDecodedBytes();
-    unsigned short* pDecodedBytes = (unsigned short*)decodedBytes.data();
-    unsigned short* pRawBytes = (unsigned short*)rawBytes.data();
-
-    for(int i=0; i < decodedBytes.size() / 2; i++) {
-        if(*pRawBytes != *pDecodedBytes) {
-            printf("mismatch at offset %d\n", i);
-            return;
+    for(int i=0; i < iterations; i++) {
+        const size_t result = decoder.decode();
+        if(result !=0) {
+            printf("ERROR - decode() returned = %ld (length=%ld)\n", result, encodedBytes.size());
         }
-        pDecodedBytes++;
-        pRawBytes++;
     }
 
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
+    sub_timespec(start, finish, &delta);
+    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec ;
+    printf("Native-decode %s %f\n", imageName, ns/1000000.0 / (double)iterations);
+}
+
+
+void encodeFile(const char* imageName, const FrameInfo frameInfo, size_t iterations = 1) {
+    std::string inPath = "test/fixtures/raw/";
+    inPath += imageName;
+    inPath += ".RAW";
+
+    JpegXLEncoder encoder;
+    std::vector<uint8_t>& rawBytes = encoder.getDecodedBytes(frameInfo);
+    readFile(inPath, rawBytes);
+
+    timespec start, finish, delta;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+
+    for(int i=0; i < iterations; i++) {
+        const size_t result = encoder.encode();
+        if(result !=0) {
+            printf("ERROR - encode() returned = %ld (length=%ld)\n", result, rawBytes.size());
+        }
+    }
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
+    sub_timespec(start, finish, &delta);
+    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
+    printf("Native-encode %s %f\n", imageName, ns/1000000.0/ (double)iterations);
 }
 
 int main(int argc, char** argv) {
-    //roundTrip("test/fixtures/raw/nature_picture.raw", {.width = 610, .height = 407, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/nature_picture.jxl");
-    //encodeFile("test/fixtures/raw/nature_picture.raw", {.width = 610, .height = 407, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/nature.jxl");
+  const size_t iterations = (argc > 1) ? atoi(argv[1]) : 1;
+  encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("MG1", {.width = 3064, .height = 4774, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("MR1", {.width = 512, .height = 512, .bitsPerSample =  16, .componentCount = 1}, iterations);
+  encodeFile("MR2", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("MR3", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("MR4", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("NM1", {.width = 256, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("RG1", {.width = 1841, .height = 1955, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("RG2", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("RG3", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("SC1", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("US1", {.width = 640, .height = 480, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL1", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL2", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL3", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL4", {.width = 2226, .height = 1868, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL5", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("VL6", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
+  encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
 
-    /*roundTrip("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
-    roundTrip("test/fixtures/raw/CT2.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2048, "test/fixtures/jxl/CT2.jxl");
-    roundTrip("test/fixtures/raw/MG1.RAW", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MG1.jxl");
-    roundTrip("test/fixtures/raw/MR1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR1.jxl");
-    roundTrip("test/fixtures/raw/MR2.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR2.jxl");
-    roundTrip("test/fixtures/raw/MR3.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR3.jxl");
-    roundTrip("test/fixtures/raw/MR4.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR4.jxl");
-    roundTrip("test/fixtures/raw/NM1.RAW", {.width = 256, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/NM1.jxl");
-    roundTrip("test/fixtures/raw/RG1.RAW", {.width = 1841, .height = 1955, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG1.jxl");
-    roundTrip("test/fixtures/raw/RG2.RAW", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG2.jxl");
-    roundTrip("test/fixtures/raw/RG3.RAW", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG3.jxl");
-    roundTrip("test/fixtures/raw/SC1.RAW", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/SC1.jxl");
-    roundTrip("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
-    */
+  decodeFile("CT1", iterations);
+  decodeFile("CT2", iterations);
+  decodeFile("MG1", iterations);
+  decodeFile("MR1", iterations);
+  decodeFile("MR2", iterations);
+  decodeFile("MR3", iterations);
+  decodeFile("MR4", iterations);
+  decodeFile("NM1", iterations);
+  decodeFile("RG1", iterations);
+  decodeFile("RG2", iterations);
+  decodeFile("RG3", iterations);
+  decodeFile("SC1", iterations);
+  decodeFile("US1", iterations);
+  decodeFile("VL1", iterations);
+  decodeFile("VL2", iterations);
+  decodeFile("VL3", iterations);
+  decodeFile("VL4", iterations);
+  decodeFile("VL5", iterations);
+  decodeFile("VL6", iterations);
+  decodeFile("XA1", iterations);
 
-    encodeFile("test/fixtures/raw/CT1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2000, "test/fixtures/jxl/CT1.jxl");
-    encodeFile("test/fixtures/raw/CT2.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 2048, "test/fixtures/jxl/CT2.jxl");
-    encodeFile("test/fixtures/raw/MG1.RAW", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MG1.jxl");
-    encodeFile("test/fixtures/raw/MR1.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR1.jxl");
-    encodeFile("test/fixtures/raw/MR2.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR2.jxl");
-    encodeFile("test/fixtures/raw/MR3.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR3.jxl");
-    encodeFile("test/fixtures/raw/MR4.RAW", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/MR4.jxl");
-    encodeFile("test/fixtures/raw/NM1.RAW", {.width = 256, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/NM1.jxl");
-    encodeFile("test/fixtures/raw/RG1.RAW", {.width = 1841, .height = 1955, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG1.jxl");
-    encodeFile("test/fixtures/raw/RG2.RAW", {.width = 1760, .height = 2140, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG2.jxl");
-    encodeFile("test/fixtures/raw/RG3.RAW", {.width = 1760, .height = 1760, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/RG3.jxl");
-    encodeFile("test/fixtures/raw/SC1.RAW", {.width = 2048, .height = 2487, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/SC1.jxl");
-    encodeFile("test/fixtures/raw/US1.RAW", {.width = 640, .height = 480, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/US1.jxl");
-    encodeFile("test/fixtures/raw/VL1.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL1.jxl");
-    encodeFile("test/fixtures/raw/VL2.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL2.jxl");
-    encodeFile("test/fixtures/raw/VL3.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL3.jxl");
-    encodeFile("test/fixtures/raw/VL4.RAW", {.width = 2226, .height = 1868, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL4.jxl");
-    encodeFile("test/fixtures/raw/VL5.RAW", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL5.jxl");
-    encodeFile("test/fixtures/raw/VL6.RAW", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, 0, "test/fixtures/jxl/VL6.jxl");
-    encodeFile("test/fixtures/raw/XA1.RAW", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, 0, "test/fixtures/jxl/XA1.jxl");
-
-    //decodeFile("test/fixtures/jxl/nature_picture.jxl", "test/fixtures/raw/nature_picture.raw");
-
-    //decodeFile("test/fixtures/jxl/CT1.jxl");
-    /*
-    decodeFile("test/fixtures/jxl/CT2.jxl");
-    decodeFile("test/fixtures/jxl/MG1.jxl");
-    decodeFile("test/fixtures/jxl/MR1.jxl");
-    decodeFile("test/fixtures/jxl/MR2.jxl");
-    decodeFile("test/fixtures/jxl/MR3.jxl");
-    decodeFile("test/fixtures/jxl/MR4.jxl");
-    decodeFile("test/fixtures/jxl/NM1.jxl");
-    decodeFile("test/fixtures/jxl/RG1.jxl");
-    decodeFile("test/fixtures/jxl/RG2.jxl");
-    decodeFile("test/fixtures/jxl/RG3.jxl");
-    decodeFile("test/fixtures/jxl/SC1.jxl");
-    decodeFile("test/fixtures/jxl/XA1.jxl");
-    */
-    return 0;
+  return 0;
 }
