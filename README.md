@@ -15,26 +15,34 @@ This project uses git submodules to pull in libjxl.  If developing, initialize t
 
 This project uses Docker to provide a consistent developer environment.
 
-Create docker container 'jxlbuild'
+Create docker container 'libjxljsbuild'
 
 ```
-> (cd Docker; ./build.sh)
+> scripts/docker-build.sh
 ```
 
-Create shell inside jxlbuild container:
+Create shell inside libjxljsbuild container:
 
 ```
-> ./Docker/docker.sh
+> scripts/docker-sh.sh
 ```
 
-
-To build WASM:
-
+Install node 16 (inside docker shell):
 ```
-> ./build.sh
+> nvm install 16
 ```
 
-To build native C/C++ version:
+To build WASM (inside docker shell):
 ```
-> ./build-native.sh
+> scripts/wasm-build.sh
+```
+
+To build native C/C++ version (inside docker shell):
+```
+> scripts/native-build.sh
+```
+
+Run performance test (inside docker shell):
+```
+> scripts/performance.sh
 ```

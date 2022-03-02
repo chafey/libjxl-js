@@ -1,68 +1,61 @@
+// Copyright (c) Chris Hafey.
+// SPDX-License-Identifier: MIT
 let libjxljs = require('../../dist/libjxljs.js');
+const codecHelper = require('./codec-helper.js')
 const fs = require('fs')
 
-function decode(pathToJPEGXLFile, iterations = 1) {
-  const encodedBitStream = fs.readFileSync(pathToJPEGXLFile);
-  const decoder = new libjxljs.JpegXLDecoder();
-  const encodedBuffer = decoder.getEncodedBuffer(encodedBitStream.length);
-  encodedBuffer.set(encodedBitStream);
-
-  // do the actual benchmark
-  const beginDecode = process.hrtime();
-  for(var i=0; i < iterations; i++) {
-    decoder.decode();
-  }
-  const decodeDuration = process.hrtime(beginDecode); // hrtime returns seconds/nanoseconds tuple
-  const decodeDurationInSeconds = (decodeDuration[0] + (decodeDuration[1] / 1000000000));
-  
-  // Print out information about the decode
-  console.log("Decode of " + pathToJPEGXLFile + " took " + ((decodeDurationInSeconds / iterations * 1000)) + " ms");
-  const frameInfo = decoder.getFrameInfo();
-  console.log('  frameInfo = ', frameInfo);
-  var decoded = decoder.getDecodedBuffer();
-  console.log('  decoded length = ', decoded.length);
-
+function decodeFile(codec, imageName, iterations = 1) {
+  const encodedImagePath = '../fixtures/jxl/' + imageName + ".jxl"
+  encodedBitStream = fs.readFileSync(encodedImagePath)
+  const decoder = new codec.JpegXLDecoder()
+  const result = codecHelper.decode(decoder, encodedBitStream, iterations)
+  console.log("WASM-decode   " + imageName + " " +  result.decodeTimeMS);
   decoder.delete();
+  return result
 }
 
-function encode(pathToUncompressedImageFrame, imageFrame, iterations = 1) {
+function encodeFile(codec, imageName, imageFrame, iterations = 1) {
+  const pathToUncompressedImageFrame = '../fixtures/raw/' + imageName + ".RAW"
   const uncompressedImageFrame = fs.readFileSync(pathToUncompressedImageFrame);
-  const encoder = new libjxljs.JpegXLEncoder();
-  encoder.setEffort(1)
-  const decodedBytes = encoder.getDecodedBuffer(imageFrame);
-  decodedBytes.set(uncompressedImageFrame);
-
-  const encodeBegin = process.hrtime();
-  for(var i=0; i < iterations;i++) {
-    encoder.encode();
-  }
-  const encodeDuration = process.hrtime(encodeBegin);
-  const encodeDurationInSeconds = (encodeDuration[0] + (encodeDuration[1] / 1000000000));
-  
-  // print out information about the encode
-  console.log("Encode of " + pathToUncompressedImageFrame + " took " + ((encodeDurationInSeconds / iterations * 1000)) + " ms");
-  const encodedBytes = encoder.getEncodedBuffer();
-  console.log('  encoded length=', encodedBytes.length)
-
-  // cleanup allocated memory
+  const encoder = new codec.JpegXLEncoder();
+  //encoder.setQuality(false, 0.001);
+  const result = codecHelper.encode(encoder, uncompressedImageFrame, imageFrame, iterations)
+  console.log("WASM-encode   " + imageName + " " +  result.encodeTimeMS);
   encoder.delete();
+  return result
+}
+
+function main(codec) {
+  const iterations = (process.argv.length > 2) ? parseInt(process.argv[2]) : 1
+  encodeFile(codec, 'CT1', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations)
+  encodeFile(codec, 'CT2', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(codec, 'MG1', {width: 3064, height: 4774, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'MR1', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(codec, 'MR2', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'MR3', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(codec, 'MR4', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'NM1', {width: 256, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: true}, iterations);
+  encodeFile(codec, 'RG1', {width: 1841, height: 1955, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'RG2', {width: 1760, height: 2140, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'RG3', {width: 1760, height: 1760, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'SC1', {width: 2048, height: 2487, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  encodeFile(codec, 'XA1', {width: 1024, height: 1024, bitsPerSample: 16, componentCount: 1, isSigned: false}, iterations);
+  decodeFile(codec, 'CT1', iterations)
+  decodeFile(codec, 'CT2', iterations)
+  decodeFile(codec, 'MG1', iterations)
+  decodeFile(codec, 'MR1', iterations)
+  decodeFile(codec, 'MR2', iterations)
+  decodeFile(codec, 'MR3', iterations)
+  decodeFile(codec, 'MR4', iterations)
+  decodeFile(codec, 'NM1', iterations)
+  decodeFile(codec, 'RG1', iterations)
+  decodeFile(codec, 'RG2', iterations)
+  decodeFile(codec, 'RG3', iterations)
+  decodeFile(codec, 'SC1', iterations)
+  decodeFile(codec, 'XA1', iterations)
 }
 
 libjxljs.onRuntimeInitialized = async _ => {
-
-  encode('../fixtures/raw/CT2.RAW', {width: 512, height: 512, bitsPerSample: 16, componentCount: 1});
-
-  decode('../fixtures/jxl/CT1.jxl');
-  decode('../fixtures/jxl/CT2.jxl');
-  decode('../fixtures/jxl/MG1.jxl');
-  decode('../fixtures/jxl/MR1.jxl');
-  decode('../fixtures/jxl/MR2.jxl');
-  decode('../fixtures/jxl/MR3.jxl');
-  decode('../fixtures/jxl/MR4.jxl');
-  decode('../fixtures/jxl/NM1.jxl');
-  decode('../fixtures/jxl/RG1.jxl');
-  decode('../fixtures/jxl/RG2.jxl');
-  decode('../fixtures/jxl/RG3.jxl');
-  decode('../fixtures/jxl/SC1.jxl');
-  decode('../fixtures/jxl/XA1.jxl');
+    main(libjxljs);
 }
+
