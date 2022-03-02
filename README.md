@@ -18,7 +18,7 @@ This project uses Docker to provide a consistent developer environment.
 Create docker container 'jxlbuild'
 
 ```
-> ./Docker/build.sh
+> (cd Docker; ./build.sh)
 ```
 
 Create shell inside jxlbuild container:
