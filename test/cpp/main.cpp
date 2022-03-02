@@ -60,9 +60,8 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
     }
 }
 void decodeFile(const char* imageName, size_t iterations = 1) {
-    std::string inPath = "test/fixtures/jxl/";
+    std::string inPath = "test/fixtures/jxl-progressive/";
     inPath += imageName;
-    inPath += ".jxl";
     
     JpegXLDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
@@ -79,8 +78,14 @@ void decodeFile(const char* imageName, size_t iterations = 1) {
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
-    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec ;
-    printf("Native-decode %s %f\n", imageName, ns/1000000.0 / (double)iterations);
+    auto frameInfo = decoder.getFrameInfo();
+
+    auto ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
+    auto timePerFrame = ns / 1000000.0 / (double)iterations;
+    auto mps = frameInfo.width * frameInfo.height / timePerFrame / 1024 / 1024 * 1000;
+    auto fps = 1000 / timePerFrame;
+
+    printf("Native-decode %s %.2f ms (%.2f MP/s, %.2f FPS)\n", imageName, timePerFrame, mps, fps);
 }
 
 
@@ -110,8 +115,8 @@ void encodeFile(const char* imageName, const FrameInfo frameInfo, size_t iterati
 }
 
 int main(int argc, char** argv) {
-  const size_t iterations = (argc > 1) ? atoi(argv[1]) : 1;
-  encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  const size_t iterations = (argc > 1) ? atoi(argv[1]) : 10;
+  /*encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
   encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
   encodeFile("MG1", {.width = 3064, .height = 4774, .bitsPerSample = 16, .componentCount = 1}, iterations);
   encodeFile("MR1", {.width = 512, .height = 512, .bitsPerSample =  16, .componentCount = 1}, iterations);
@@ -131,11 +136,11 @@ int main(int argc, char** argv) {
   encodeFile("VL5", {.width = 2670, .height = 3340, .bitsPerSample = 8, .componentCount = 3}, iterations);
   encodeFile("VL6", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
   encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
-
-  decodeFile("CT1", iterations);
-  decodeFile("CT2", iterations);
-  decodeFile("MG1", iterations);
-  decodeFile("MR1", iterations);
+*/
+  decodeFile("CT1.j2k.png.jxl", iterations);
+  //decodeFile("CT2", iterations);
+  decodeFile("MG1.j2k.png.jxl", iterations);
+  /*decodeFile("MR1", iterations);
   decodeFile("MR2", iterations);
   decodeFile("MR3", iterations);
   decodeFile("MR4", iterations);
@@ -151,7 +156,7 @@ int main(int argc, char** argv) {
   decodeFile("VL4", iterations);
   decodeFile("VL5", iterations);
   decodeFile("VL6", iterations);
-  decodeFile("XA1", iterations);
+  decodeFile("XA1", iterations);*/
 
   return 0;
 }

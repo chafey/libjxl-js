@@ -4,7 +4,7 @@
 #-------------------------------------------------------------------------------------------------------------
 
 #FROM mcr.microsoft.com/vscode/devcontainers/base:0-debian-9
-FROM emscripten/emsdk:2.0.31
+FROM emscripten/emsdk:1.39.5
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,12 +22,11 @@ RUN apt-get update \
     #
     # Install C++ tools
     #&& apt-get -y install build-essential cmake cppcheck valgrind \
-    && apt-get -y install build-essential cppcheck valgrind pkg-config libbrotli-dev clang \
+    && apt-get -y install build-essential cppcheck valgrind \
     # libjxl deps
     && apt-get -y install pkg-config libbrotli-dev libgflags-dev \
     # version 3.17 of cmake
-    #& wget -qO- "https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C /usr/local\
-    #& wget -qO- "https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C /usr/local\
+    && wget -qO- "https://cmake.org/files/v3.17/cmake-3.17.0-Linux-x86_64.tar.gz" | tar --strip-components=1 -xz -C /usr/local\
     #
     # [Optional] Update UID/GID if needed
     && if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
