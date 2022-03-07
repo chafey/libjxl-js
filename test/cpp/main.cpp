@@ -59,9 +59,9 @@ void sub_timespec(struct timespec t1, struct timespec t2, struct timespec *td)
         td->tv_sec++;
     }
 }
-void decodeFile(const char* imageName, size_t iterations = 1) {
-    std::string inPath = "test/fixtures/jxl-progressive/";
-    inPath += imageName;
+void decodeFile(const char* inPath, size_t iterations = 1) {
+    //std::string inPath = "test/fixtures/jxl-progressive/";
+    //inPath += imageName;
     
     JpegXLDecoder decoder;
     std::vector<uint8_t>& encodedBytes = decoder.getEncodedBytes();
@@ -81,11 +81,14 @@ void decodeFile(const char* imageName, size_t iterations = 1) {
     auto frameInfo = decoder.getFrameInfo();
 
     auto ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
-    auto timePerFrame = ns / 1000000.0 / (double)iterations;
-    auto mps = frameInfo.width * frameInfo.height / timePerFrame / 1024 / 1024 * 1000;
-    auto fps = 1000 / timePerFrame;
+    auto totalTimeMS = ns / 1000000.0;
+    auto timePerFrameMS = ns / 1000000.0 / (double)iterations;
+    auto pixels = (frameInfo.width * frameInfo.height);
+    auto megaPixels = (double)pixels / (1024.0 * 1024.0);
+    auto fps = 1000 / timePerFrameMS;
+    auto mps = (double)(megaPixels) * fps;
 
-    printf("Native-decode %s %.2f ms (%.2f MP/s, %.2f FPS)\n", imageName, timePerFrame, mps, fps);
+    printf("Native-decode %s Pixels=%d megaPixels=%f TotalTime= %.2f ms TPF=%.2f ms (%.2f MP/s, %.2f FPS)\n", inPath, pixels, megaPixels, totalTimeMS, timePerFrameMS, mps, fps);
 }
 
 
@@ -110,15 +113,25 @@ void encodeFile(const char* imageName, const FrameInfo frameInfo, size_t iterati
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &finish);
     sub_timespec(start, finish, &delta);
-    const double ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
-    printf("Native-encode %s %f\n", imageName, ns/1000000.0/ (double)iterations);
+
+    auto ns = delta.tv_sec * 1000000000.0 + delta.tv_nsec;
+    auto totalTimeMS = ns / 1000000.0;
+    auto timePerFrameMS = ns / 1000000.0 / (double)iterations;
+    auto pixels = (frameInfo.width * frameInfo.height);
+    auto megaPixels = (double)pixels / (1024.0 * 1024.0);
+    auto fps = 1000 / timePerFrameMS;
+    auto mps = (double)(megaPixels) * fps;
+
+    printf("Native-encode %s Pixels=%d megaPixels=%f TotalTime= %.2f ms TPF=%.2f ms (%.2f MP/s, %.2f FPS)\n", imageName, pixels, megaPixels, totalTimeMS, timePerFrameMS, mps, fps);
 }
 
 int main(int argc, char** argv) {
   const size_t iterations = (argc > 1) ? atoi(argv[1]) : 10;
-  /*encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
-  encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
-  encodeFile("MG1", {.width = 3064, .height = 4774, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  JpegXLEncoder encoder;
+
+  encodeFile("CT1", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  /*encodeFile("CT2", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
+  encodeFile("MG1", {.width = 3064, .height = 4664, .bitsPerSample = 16, .componentCount = 1}, iterations);
   encodeFile("MR1", {.width = 512, .height = 512, .bitsPerSample =  16, .componentCount = 1}, iterations);
   encodeFile("MR2", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
   encodeFile("MR3", {.width = 512, .height = 512, .bitsPerSample = 16, .componentCount = 1}, iterations);
@@ -137,9 +150,14 @@ int main(int argc, char** argv) {
   encodeFile("VL6", {.width = 756, .height = 486, .bitsPerSample = 8, .componentCount = 3}, iterations);
   encodeFile("XA1", {.width = 1024, .height = 1024, .bitsPerSample = 16, .componentCount = 1}, iterations);
 */
-  decodeFile("CT1.j2k.png.jxl", iterations);
+  decodeFile("test/fixtures/jxl-progressive/CT1.j2k.png.jxl", iterations);
   //decodeFile("CT2", iterations);
-  decodeFile("MG1.j2k.png.jxl", iterations);
+  decodeFile("test/fixtures/jxl-progressive/MG1.j2k.png.jxl", iterations);
+
+
+  decodeFile("test/fixtures/jxl/CT1.jxl", iterations);
+  decodeFile("test/fixtures/jxl/MG1.jxl", iterations);
+
   /*decodeFile("MR1", iterations);
   decodeFile("MR2", iterations);
   decodeFile("MR3", iterations);

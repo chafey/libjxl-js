@@ -46,3 +46,9 @@ Run performance test (inside docker shell):
 ```
 > scripts/performance.sh
 ```
+
+## NOTES
+
+Luca's suggestions for cjxl parameters to use for progressive lossless encoding
+
+* ./tools/cjxl -P 0 -R 1 -I 0 -s 4 -g 0 in.png out.jxl
